@@ -8,7 +8,6 @@ namespace MyBlog.Models
         {
 
         }
-
         public DbSet<Author> Author { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Blog> Blogs { get; set; }

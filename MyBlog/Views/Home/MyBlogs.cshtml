@@ -1,0 +1,40 @@
+﻿@model IEnumerable<MyBlog.Models.Blog>
+@{
+    ViewData["Title"] = "My Blogs";
+}
+
+<div class="container">
+    <br />
+    <br />
+    <a href="/Home/AddBlog" class="btn btn-success">Blog Ekle</a>
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            @foreach (var item in Model)
+            {
+                    <div class="post-preview">
+                        <a asp-action="Post" asp-route-id="@item.Id">
+                            <h2 class="post-title">
+                            @item.Title
+                            </h2>
+                            <h3 class="post-subtitle">
+                            @item.Subtitle
+                            </h3>
+                        </a>
+                        <p class="post-meta">
+                            Posted by
+                            @item.Author.Name
+                            @item.CreateTime 'da yayınlandı
+                        </p>
+
+                        
+                    </div>
+                    <hr>
+            }
+
+            <!-- Pager -->
+            <div class="clearfix">
+                <a class="btn btn-primary float-right" href="#">Older Posts &rarr;</a>
+            </div>
+        </div>
+    </div>
+</div>
