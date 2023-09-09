@@ -47,14 +47,28 @@ namespace MyBlog.Controllers
 
         public IActionResult MyBlogs(int id)
         {
+            // Kategorileri veritabanından alın veya başka bir kaynaktan getirin
+            var categories = _context.Categories.Select(w =>
+                new SelectListItem
+                {
+                    Text = w.Name,
+                    Value = w.Id.ToString()
+                }
+            ).ToList();
+
             int AutId = (int)HttpContext.Session.GetInt32("id");
             var list = _context.Blogs.Where(b => b.AuthorId == AutId).OrderByDescending(x => x.CreateTime).ToList();
             foreach (var blog in list)
             {
                 blog.Author = _context.Author.Find(blog.AuthorId);
             }
+
+            // ViewBag.Categories'a SelectListItem listesini ekleyin
+            ViewBag.Categories = categories;
+
             return View(list);
         }
+        
 
         public IActionResult AddBlog()
         {
@@ -89,6 +103,52 @@ namespace MyBlog.Controllers
             return Json(false);
         }
 
+        public async Task<IActionResult> BlogDetails(int Id)
+        {
+            var blog = await _context.Blogs.FindAsync(Id);
+            return Json(blog);
+        }
+        public async Task<IActionResult> UpdateBlog(Blog blog)
+        {
+            
+                // Veritabanından güncellenen blogu alın
+                var existingBlog = await _context.Blogs.FindAsync(blog.Id);
+
+                if (existingBlog == null)
+                {
+                    return NotFound(); // Blog bulunamadıysa hata döndürün veya farklı bir işlem yapın
+                }
+
+                // Güncellenen verileri mevcut blog nesnesine kopyalayın
+                existingBlog.Title = blog.Title;
+                existingBlog.Subtitle = blog.Subtitle;
+                existingBlog.Content = blog.Content;
+                existingBlog.CategoryId = blog.CategoryId;
+
+                // Diğer güncelleme işlemlerini burada yapabilirsiniz
+
+                _context.Update(existingBlog);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(MyBlogs)); // İşlem başarılıysa ana sayfaya yönlendirin
+          
+
+        
+        }
+        public async Task<IActionResult> DeleteBlog(int? Id)
+        {
+            Blog blog = await _context.Blogs.FindAsync(Id);
+            _context.Remove(blog);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(MyBlogs));
+        }
+        public IActionResult Publish(int Id)
+        {
+            var blog = _context.Blogs.Find(Id);
+            blog.IsPublish = true;
+            _context.Update(blog);
+            _context.SaveChanges();
+            return RedirectToAction(nameof(MyBlogs));
+        }
 
 
 
@@ -103,7 +163,7 @@ namespace MyBlog.Controllers
         }
         public IActionResult Index()
         {
-            var list = _context.Blogs.Take(4).Where(b => b.IsPublish).OrderByDescending(x => x.CreateTime).ToList();
+            var list = _context.Blogs.Where(b => b.IsPublish).OrderByDescending(x => x.CreateTime).ToList();
             foreach (var blog in list)
             {
                 blog.Author = _context.Author.Find(blog.AuthorId);

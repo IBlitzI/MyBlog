@@ -25,11 +25,65 @@
                             @item.Author.Name
                             @item.CreateTime 'da yayınlandı
                         </p>
-
                         
-                    </div>
+                        <button class="btn btn-secondary" onclick='updateForm(@item.Id)' type="button">Güncelle</button>
+                        <a class="btn btn-danger" asp-route-id="@item.Id" asp-action="DeleteBlog">Sil</a>
+                    <td>
+                        @if (item.IsPublish)
+                        {
+                            <a class="btn btn-success">Yayınlandı</a>
+
+                        }
+                        else
+                        {
+                            <a class="btn btn-light" asp-route-id="@item.Id" asp-action="Publish">Yayınla</a>
+                        }
+                    </td>
                     <hr>
+                    </div>
             }
+            <div class="modal fade" id="BlogUpdateModal" tabindex="-1" role="dialog" aria-labelledby="BlogUpdateModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="BlogUpdateModalLabel">Blog Güncelleme</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Blog Güncelleme Formu -->
+                            <form method="post" action="/Home/UpdateBlog">
+                                <input type="hidden" name="Id" id="BlogId" />
+                                <div class="form-group">
+                                    <label for="BlogTitle">Başlık</label>
+                                    <input type="text" class="form-control" id="BlogTitle" name="Title" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="BlogSubtitle">Alt Başlık</label>
+                                    <input type="text" class="form-control" id="BlogSubtitle" name="Subtitle" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="BlogContent">İçerik</label>
+                                    <textarea class="form-control" id="BlogContent" name="Content"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="BlogCategoryId">Kategori</label>
+                                    <select name="CategoryId" class="form-control">
+                                        <option value="1002">Bilim</option>
+                                        <option value="1003">Macera</option>
+                                        <option value="1004">Korku</option>
+                                        <option value="1005">Eğlence</option>
+                                    </select>
+
+                                </div>
+                                <button type="submit" class="btn btn-primary">Güncelle</button>
+                            </form>
+                            <!-- /Blog Güncelleme Formu -->
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Pager -->
             <div class="clearfix">
@@ -38,3 +92,35 @@
         </div>
     </div>
 </div>
+@section Scripts{
+    <script>
+        // Sayfa yüklendiğinde formu temizle
+        $(document).ready(function () {
+            clearBlogForm();
+        });
+
+        // Blog güncelleme formunu doldurmak için kullanılan fonksiyon
+        function updateForm(BlogId) {
+            fetch('/Home/BlogDetails?Id=' + BlogId)
+                .then(res => res.json())
+                .then(res => {
+                    $('#BlogId').val(res.id);
+                    $('#BlogTitle').val(res.title);
+                    $('#BlogSubtitle').val(res.subtitle);
+                    $('#BlogContent').val(res.content); // İçerik eklemek
+                    $('#BlogCategoryId').val(res.category); // Kategori eklemek (Örnek olarak)
+                });
+
+            $('#BlogUpdateModal').modal('show');
+        }
+
+        // Blog güncelleme formunu temizlemek için kullanılan fonksiyon
+        function clearBlogForm() {
+            $('#BlogId').val(null);
+            $('#BlogTitle').val(null);
+            $('#BlogSubtitle').val(null);
+            $('#BlogContent').val(null);
+            $('#BlogCategoryId').val(''); // Kategori seçimini temizlemek (Örnek olarak)
+        }
+    </script>
+}
