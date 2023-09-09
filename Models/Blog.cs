@@ -14,5 +14,6 @@
         public int AuthorId { get; set; }
         public Category Category { get; set; }
         public int CategoryId { get; set; }
+        public List<Comment> Comments { get; set; }
     }
 }

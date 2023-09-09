@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using MyBlog.Models;
 using System.Diagnostics;
 using System.Security.Claims;
@@ -87,7 +88,7 @@ namespace MyBlog.Controllers
             {
                 var file = Request.Form.Files.First();
                 //Blog için eklenen resimlerin kaydedilmesi istedinilen yer.
-                string savePath = Path.Combine("C:", "Users", "cls", "Desktop", "BlogDeneme", "MyBlog", "MyBlog", "wwwroot", "img");
+                string savePath = Path.Combine("C:", "Users", "cls", "Desktop", "BlogDeneme", "MyBlog", "wwwroot", "img");
                 var fileName = $"{DateTime.Now:MMddHHmmss}.{file.FileName.Split(".").Last()}";
                 var fileUrl = Path.Combine(savePath, fileName);
                 using (var fileStream = new FileStream(fileUrl, FileMode.Create))
@@ -170,12 +171,54 @@ namespace MyBlog.Controllers
             }
             return View(list);
         }
-
-        
-
-        public IActionResult Post(int Id)
+        [HttpPost]
+        public IActionResult AddComment(int id, string authorName, string commentText)
         {
-            var blog = _context.Blogs.Find(Id);
+            var blog = _context.Blogs.FirstOrDefault(b => b.Id == id);
+
+            if (blog == null)
+            {
+                return NotFound(); // Blog bulunamadıysa 404 hatası döndür
+            }
+
+            if (blog.Comments == null)
+            {
+                blog.Comments = new List<Comment>(); // Yorumlar için bir liste oluşturun
+            }
+
+            if (!string.IsNullOrEmpty(authorName) && !string.IsNullOrEmpty(commentText))
+            {
+                // Yeni bir yorum oluşturun
+                var newComment = new Comment
+                {
+                    AuthorName = authorName,
+                    Text = commentText
+                };
+
+                // Blog ile yorumu ilişkilendirin
+                blog.Comments.Add(newComment);
+
+                // Veritabanına kaydedin
+                _context.SaveChanges();
+            }
+
+            // Yorum ekledikten sonra, blog görüntüleme sayfasına yönlendirin
+            return RedirectToAction("Post", new { id = id });
+        }
+
+
+
+        public IActionResult Post(int id)
+        {
+            var blog = _context.Blogs
+                .Include(b => b.Comments) // Yorumları da getir
+                .FirstOrDefault(b => b.Id == id);
+
+            if (blog == null)
+            {
+                return NotFound(); // Blog bulunamadıysa 404 hatası döndür
+            }
+
             blog.Author = _context.Author.Find(blog.AuthorId);
             blog.ImagePath = "/img/" + blog.ImagePath;
             return View(blog);
